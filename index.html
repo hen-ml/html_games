@@ -1,368 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piano Practice — slow it down, loop it, play along</title>
-<meta name="description" content="A free browser practice tool: open a MIDI file, slow it to 60%, loop the bars that keep falling apart, and watch the notes fall onto the keys. No install, no account.">
-<link rel="canonical" href="https://hen-ml.github.io/html_games/">
-<meta name="theme-color" content="#0a0a0c">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="Piano Practice — slow it down, loop it, play along">
-<meta property="og:description" content="Open a MIDI file, slow it to 60%, loop any bars, and watch the notes fall onto the keys. Free, in the browser.">
-<meta property="og:url" content="https://hen-ml.github.io/html_games/">
-<meta property="og:image" content="https://hen-ml.github.io/html_games/assets/hero.png">
-<meta name="twitter:card" content="summary_large_image">
-
-<link rel="icon" href="piano/icon.svg" type="image/svg+xml">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Piano Practice",
-  "applicationCategory": "MusicApplication",
-  "operatingSystem": "Web",
-  "url": "https://hen-ml.github.io/html_games/piano/",
-  "description": "A browser practice tool for piano and violin: open a MIDI file, slow it down, loop any bars, and follow falling notes onto the keys.",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-}
-</script>
-
-<style>
-    :root {
-        --bg: #0a0a0c;
-        --panel: #121216;
-        --panel-2: #17171d;
-        --line: #24242c;
-        --text: #eceef3;
-        --muted: #9aa2ae;
-        --faint: #6d7480;
-        --accent: #8b6cff;
-        --accent-2: #6d4bd8;
-        --accent-3: #4b2fb0;
-        --max: 1080px;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        line-height: 1.55;
-        -webkit-font-smoothing: antialiased;
-    }
-    a { color: inherit; }
-    img { max-width: 100%; height: auto; display: block; }
-
-    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
-
-    /* ---------- top bar ---------- */
-    header {
-        border-bottom: 1px solid var(--line);
-        background: rgba(10,10,12,0.9);
-        position: sticky; top: 0; z-index: 20;
-        backdrop-filter: blur(10px);
-    }
-    .nav {
-        display: flex; align-items: center; gap: 22px;
-        height: 60px;
-    }
-    .brand {
-        font-weight: 700; letter-spacing: -0.01em; text-decoration: none;
-        font-size: 17px; margin-right: auto;
-    }
-    .brand span { color: var(--accent); }
-    .nav a.link {
-        color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
-    }
-    .nav a.link:hover { color: var(--text); }
-
-    /* ---------- hero ---------- */
-    .hero { padding: 72px 0 40px; text-align: center; }
-    .eyebrow {
-        display: inline-block; margin: 0 0 18px;
-        font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-        color: var(--accent); font-weight: 700;
-    }
-    h1 {
-        margin: 0 auto 20px; max-width: 780px;
-        font-size: clamp(2.2rem, 5.6vw, 3.9rem);
-        line-height: 1.06; letter-spacing: -0.035em; font-weight: 800;
-    }
-    .lede {
-        margin: 0 auto 30px; max-width: 620px;
-        color: var(--muted); font-size: clamp(1rem, 2vw, 1.16rem);
-    }
-    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 14px 24px; border-radius: 12px;
-        font-size: 16px; font-weight: 700; text-decoration: none;
-        border: 1px solid transparent; transition: transform .12s, box-shadow .12s, background .12s;
-    }
-    .btn.primary {
-        background: linear-gradient(180deg, var(--accent-2), var(--accent-3));
-        color: #fff;
-        box-shadow: 0 8px 28px rgba(109,75,216,0.38);
-    }
-    .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 12px 34px rgba(109,75,216,0.5); }
-    .btn.ghost { background: var(--panel); border-color: var(--line); color: var(--text); }
-    .btn.ghost:hover { background: var(--panel-2); }
-    .fine { margin: 18px 0 0; color: var(--faint); font-size: 13px; }
-
-    figure.shot {
-        margin: 46px auto 0; max-width: 1000px;
-        border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
-        background: #000;
-        box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset;
-    }
-    figure.shot img { width: 100%; }
-    figure.shot figcaption {
-        padding: 10px 16px; font-size: 12.5px; color: var(--faint);
-        border-top: 1px solid var(--line); background: var(--panel);
-        text-align: left;
-    }
-
-    /* ---------- sections ---------- */
-    section { padding: 72px 0; border-top: 1px solid var(--line); }
-    h2 {
-        margin: 0 0 10px; font-size: clamp(1.5rem, 3vw, 2rem);
-        letter-spacing: -0.02em; font-weight: 750;
-    }
-    .sub { margin: 0 0 36px; color: var(--muted); max-width: 620px; }
-
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .step {
-        background: var(--panel); border: 1px solid var(--line);
-        border-radius: 14px; padding: 24px;
-    }
-    .step .num {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 28px; height: 28px; border-radius: 8px; margin-bottom: 14px;
-        background: #241a3a; color: var(--accent); font-weight: 800; font-size: 14px;
-        border: 1px solid #34245a;
-    }
-    .step h3 { margin: 0 0 6px; font-size: 16px; }
-    .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
-
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .card {
-        background: var(--panel); border: 1px solid var(--line);
-        border-radius: 12px; padding: 18px 20px;
-    }
-    .card .ico { font-size: 20px; }
-    .card h3 { margin: 8px 0 4px; font-size: 15px; }
-    .card p { margin: 0; color: var(--muted); font-size: 13.5px; }
-
-    /* ---------- violin ---------- */
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-    .split .shot { margin: 0; max-width: 100%; }
-    .split p { color: var(--muted); }
-    .split .note {
-        margin-top: 18px; padding: 12px 14px; border-left: 2px solid var(--accent);
-        background: #141020; color: #b9b0d6; font-size: 13.5px; border-radius: 0 8px 8px 0;
-    }
-
-    /* ---------- faq ---------- */
-    details {
-        border-bottom: 1px solid var(--line); padding: 16px 0;
-    }
-    details:first-of-type { border-top: 1px solid var(--line); }
-    summary {
-        cursor: pointer; font-weight: 650; font-size: 15.5px; list-style: none;
-        display: flex; justify-content: space-between; gap: 20px;
-    }
-    summary::-webkit-details-marker { display: none; }
-    summary::after { content: '+'; color: var(--faint); font-weight: 400; }
-    details[open] summary::after { content: '−'; }
-    details p { margin: 12px 0 0; color: var(--muted); font-size: 14.5px; max-width: 720px; }
-
-    /* ---------- footer ---------- */
-    footer {
-        border-top: 1px solid var(--line); padding: 40px 0 60px;
-        color: var(--faint); font-size: 13.5px;
-    }
-    footer .row { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
-    footer .spacer { flex: 1; }
-
-    @media (max-width: 820px) {
-        .steps, .grid { grid-template-columns: 1fr; }
-        .split { grid-template-columns: 1fr; gap: 24px; }
-        .hero { padding-top: 52px; }
-        section { padding: 56px 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        html { scroll-behavior: auto; }
-        .btn { transition: none; }
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Games — experiments in one file each</title>
+    <meta name="description" content="A collection of small browser games and experiments: an ML interview quiz, a Big-O speedrun, puzzle games, and a couple of original RPGs. No installs.">
+    <link rel="canonical" href="https://hen-ml.github.io/html_games/">
+    <style>
+        body {
+            margin: 0;
+            padding-top: 48px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f4f4f9;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        h1 { color: #2c3e50; margin-bottom: 6px; }
+        h2 { color: #2c3e50; margin: 18px 0 0; font-size: 20px; }
+        p.sub { color: #7f8c8d; margin-top: 0; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            max-width: 700px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        a.card {
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        a.card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(44, 62, 80, 0.3);
+        }
+        .emoji { font-size: 42px; display: block; margin-bottom: 10px; }
+        .name { font-size: 20px; font-weight: bold; }
+        .desc { font-size: 13px; color: #95a5a6; margin-top: 6px; }
+    </style>
 </head>
 <body>
-
-<header>
-    <div class="wrap nav">
-        <a class="brand" href="./">practice<span>.</span></a>
-        <a class="link" href="piano/">Open app</a>
-        <a class="link" href="games.html">Games</a>
-        <a class="link" href="https://github.com/hen-ml/html_games">GitHub</a>
+    <nav style="position:absolute;top:14px;left:16px;font-size:14px">
+        <a href="https://hen-ml.github.io/piano/" style="color:#7f8c8d;text-decoration:none">🎹 Piano practice →</a>
+    </nav>
+    <h1>🕹️ HTML Games</h1>
+    <p class="sub">No installs, just open and play.</p>
+    <h2>🧠 AI Interview Prep</h2>
+    <div class="grid">
+        <a class="card" href="quizboss.html">
+            <span class="emoji">🤖</span>
+            <span class="name">AI Quiz Boss</span>
+            <div class="desc">Beat bosses with ML knowledge</div>
+        </a>
+        <a class="card" href="lossdoctor.html">
+            <span class="emoji">📉</span>
+            <span class="name">Loss Curve Doctor</span>
+            <div class="desc">Diagnose broken training runs</div>
+        </a>
+        <a class="card" href="bigo.html">
+            <span class="emoji">⏱️</span>
+            <span class="name">Big-O Blitz</span>
+            <div class="desc">60-second complexity speedrun</div>
+        </a>
     </div>
-</header>
-
-<main>
-    <div class="wrap">
-        <section class="hero" style="border-top:0">
-            <p class="eyebrow">Free · no install · works offline</p>
-            <h1>Practice the piece you’re stuck on.</h1>
-            <p class="lede">
-                Open a MIDI file, slow it to 60%, and loop the four bars that keep falling apart.
-                The notes fall onto the keys so you can see what’s coming instead of guessing.
-            </p>
-            <div class="cta">
-                <a class="btn primary" href="piano/">Open the practice tool →</a>
-                <a class="btn ghost" href="#how">How it works</a>
-            </div>
-            <p class="fine">Built-in pieces to start with · your own .mid files · USB MIDI keyboard · violin fingering</p>
-
-            <figure class="shot">
-                <img src="assets/hero.png" width="1440" height="900"
-                     alt="The practice tool playing May Song at 60% tempo with a loop set, notes falling onto a piano keyboard.">
-                <figcaption>May Song at 60% with a loop set — the falling bars show the next notes before you play them.</figcaption>
-            </figure>
-        </section>
-
-        <section id="how">
-            <h2>Three things, one screen</h2>
-            <p class="sub">No menus to dig through. The tempo, the loop, and the notes are all where you’re already looking.</p>
-            <div class="steps">
-                <div class="step">
-                    <div class="num">1</div>
-                    <h3>Open a piece</h3>
-                    <p>Pick one of the built-in songs, or drop in your own <code>.mid</code> file — the one your teacher sent, or anything you found.</p>
-                </div>
-                <div class="step">
-                    <div class="num">2</div>
-                    <h3>Slow it down</h3>
-                    <p>Pull the tempo to 40–60% and loop just the bars you keep missing. Speed it back up when it holds together.</p>
-                </div>
-                <div class="step">
-                    <div class="num">3</div>
-                    <h3>Play along</h3>
-                    <p>Notes fall onto the keys. Labels tell you what to press; violin mode turns them into string and finger.</p>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <h2>What’s in it</h2>
-            <p class="sub">Small on purpose. Everything below runs in the browser — no account, no upload to a server.</p>
-            <div class="grid">
-                <div class="card">
-                    <div class="ico">🎹</div>
-                    <h3>Your own MIDI files</h3>
-                    <p>Standard <code>.mid</code> files play locally in the tab. Nothing is uploaded anywhere.</p>
-                </div>
-                <div class="card">
-                    <div class="ico">🐢</div>
-                    <h3>Tempo and loop</h3>
-                    <p>40–150% speed, seek anywhere, loop a range until the passage stops falling apart.</p>
-                </div>
-                <div class="card">
-                    <div class="ico">🎛️</div>
-                    <h3>USB MIDI keyboard</h3>
-                    <p>Plug in a keyboard and play the on-screen instrument with real keys. Web MIDI, no driver.</p>
-                </div>
-                <div class="card">
-                    <div class="ico">🎻</div>
-                    <h3>Violin fingering</h3>
-                    <p>Toggle violin mode to label keys and falling notes by string and finger, first position.</p>
-                </div>
-                <div class="card">
-                    <div class="ico">📴</div>
-                    <h3>Works offline</h3>
-                    <p>Install it to your home screen once; it keeps working when the wifi doesn’t.</p>
-                </div>
-                <div class="card">
-                    <div class="ico">⏺️</div>
-                    <h3>Record and export</h3>
-                    <p>Capture what you played and export it as a <code>.mid</code> to keep or share.</p>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="split">
-                <div>
-                    <h2>If you play violin</h2>
-                    <p>
-                        The piano is the accompaniment, but the notes are still piano notes. Hit 🎻 and every key
-                        and falling bar is labelled the way you actually think: <strong>G1</strong>, <strong>D3</strong>,
-                        <strong>A0</strong> — string, then finger.
-                    </p>
-                    <p>
-                        Each string gets its own colour, and notes that fall outside first position stay unlabelled
-                        rather than inventing a shift that isn’t there.
-                    </p>
-                    <div class="note">
-                        It shows first position only. It doesn’t choose fingerings for you or read sheet music —
-                        it shows where the note sits, and you decide how to play it.
-                    </div>
-                </div>
-                <figure class="shot">
-                    <img src="assets/hero-violin.png" width="1440" height="900"
-                         alt="Violin mode: falling notes coloured by string with labels like G1, D1 and A0.">
-                </figure>
-            </div>
-        </section>
-
-        <section>
-            <h2>Questions</h2>
-            <details>
-                <summary>Do I need a MIDI file to start?</summary>
-                <p>No. There are built-in pieces — May Song, Long, Long Ago, Clair de Lune, Canon in D — so the app
-                   does something the moment it loads. Upload your own file when you have one.</p>
-            </details>
-            <details>
-                <summary>Do I need a MIDI keyboard?</summary>
-                <p>No. You can click or tap the keys, or use the computer keyboard (A–L for white keys, W–U for
-                   sharps). A USB MIDI keyboard works in Chrome and Edge if you have one.</p>
-            </details>
-            <details>
-                <summary>Is it really free?</summary>
-                <p>Yes. No account, no install, no ads. It’s a static site — the whole app is a few files served
-                   from GitHub Pages.</p>
-            </details>
-            <details>
-                <summary>Does it work on a phone?</summary>
-                <p>Yes. It runs in landscape and can be added to your home screen. On a phone the keyboard is
-                   narrower, so use the size control to show fewer octaves.</p>
-            </details>
-            <details>
-                <summary>What does violin mode actually do?</summary>
-                <p>It relabels the keyboard and the falling notes with string and finger — G0–G4, D0–D4, A0–A4,
-                   E0–E4 — and colours each string differently. Notes outside first position are left unlabelled.</p>
-            </details>
-            <details>
-                <summary>Does it grade my playing or read sheet music?</summary>
-                <p>No. It’s a practice aid, not a teacher: it shows you the notes and keeps time. You still have to
-                   listen.</p>
-            </details>
-        </section>
+    <h2>🎹 Music & Practice</h2>
+    <div class="grid">
+        <a class="card" href="https://hen-ml.github.io/piano/">
+            <span class="emoji">🎹</span>
+            <span class="name">Piano Practice</span>
+            <div class="desc">Slow it down, loop the bars, play along</div>
+        </a>
+        <a class="card" href="noteread.html">
+            <span class="emoji">🎼</span>
+            <span class="name">Note Reading Trainer</span>
+            <div class="desc">Name treble & bass clef notes — no timer</div>
+        </a>
     </div>
-</main>
-
-<footer>
-    <div class="wrap row">
-        <span>Built by <a href="https://github.com/hen-ml">hen-ml</a>.</span>
-        <span class="spacer"></span>
-        <a href="games.html">More experiments: browser games →</a>
-        <a href="https://github.com/hen-ml/html_games">Source</a>
+    <h2>♟️ Board Games</h2>
+    <div class="grid">
+        <a class="card" href="go.html">
+            <span class="emoji">⚫</span>
+            <span class="name">Go (19×19)</span>
+            <div class="desc">Full-rules goban — play against Claude</div>
+        </a>
     </div>
-</footer>
-
+    <h2>👾 Arcade</h2>
+    <div class="grid">
+        <a class="card" href="lumenfall/">
+            <span class="emoji">🎨</span>
+            <span class="name">Lumenfall</span>
+            <div class="desc">Painterly RPG — a world losing its color</div>
+        </a>
+        <a class="card" href="xuanyuan/">
+            <span class="emoji">🏺</span>
+            <span class="name">軒轅殘劍</span>
+            <div class="desc">Xuan-Yuan style RPG — 收妖煉化</div>
+        </a>
+        <a class="card" href="crystalquest.html">
+            <span class="emoji">💎</span>
+            <span class="name">Crystal Quest</span>
+            <div class="desc">A mini Final Fantasy — party JRPG</div>
+        </a>
+        <a class="card" href="snake.html">
+            <span class="emoji">🐍</span>
+            <span class="name">Snake</span>
+            <div class="desc">Eat, grow, don't bite yourself</div>
+        </a>
+        <a class="card" href="breakout.html">
+            <span class="emoji">🧱</span>
+            <span class="name">Breakout</span>
+            <div class="desc">Smash all the bricks</div>
+        </a>
+        <a class="card" href="tetris.html">
+            <span class="emoji">🟪</span>
+            <span class="name">Tetris</span>
+            <div class="desc">Stack falling blocks, clear lines</div>
+        </a>
+        <a class="card" href="flappy.html">
+            <span class="emoji">🐤</span>
+            <span class="name">Flappy Bird</span>
+            <div class="desc">Flap through the pipes</div>
+        </a>
+        <a class="card" href="chips.html">
+            <span class="emoji">💾</span>
+            <span class="name">Micro Chips</span>
+            <div class="desc">Chip's Challenge–style puzzler</div>
+        </a>
+        <a class="card" href="chipquest.html">
+            <span class="emoji">🐲</span>
+            <span class="name">Chip Quest</span>
+            <div class="desc">魔塔-style dungeon RPG with music</div>
+        </a>
+        <a class="card" href="rpg.html">
+            <span class="emoji">🍪</span>
+            <span class="name">Cookie Quest</span>
+            <div class="desc">Tiny RPG — save lives in a cookie</div>
+        </a>
+        <a class="card" href="2048.html">
+            <span class="emoji">🔢</span>
+            <span class="name">2048</span>
+            <div class="desc">Merge tiles to reach 2048</div>
+        </a>
+        <a class="card" href="invaders.html">
+            <span class="emoji">👾</span>
+            <span class="name">Space Invaders</span>
+            <div class="desc">Defend Earth, wave after wave</div>
+        </a>
+        <a class="card" href="minesweeper.html">
+            <span class="emoji">💣</span>
+            <span class="name">Minesweeper</span>
+            <div class="desc">Flag the mines, clear the field</div>
+        </a>
+        <a class="card" href="pong.html">
+            <span class="emoji">🏓</span>
+            <span class="name">Pong</span>
+            <div class="desc">First to 7 against the CPU</div>
+        </a>
+        <a class="card" href="simon.html">
+            <span class="emoji">🎵</span>
+            <span class="name">Simon</span>
+            <div class="desc">Repeat the growing pattern</div>
+        </a>
+    </div>
 </body>
 </html>
